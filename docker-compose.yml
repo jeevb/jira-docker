@@ -1,0 +1,40 @@
+postgres:
+  restart: always
+  image: postgres:9.6
+  volumes:
+    - "/var/lib/postgresql/data"
+  expose:
+    - "5432"
+  env_file: .env
+
+nginx:
+  restart: always
+  build: ./nginx
+  ports:
+    - "80:80"
+    - "443:443"
+  links:
+    - jira:jira
+
+jira:
+  restart: always
+  image: cptactionhank/atlassian-jira
+  expose:
+    - "8080"
+  volumes:
+    - "/opt/atlassian/jira"
+    - "/var/atlassian/jira"
+  links:
+    - postgres:postgres
+
+admin:
+  build: ./admin
+  volumes:
+    = "./bin:/docker/bin"
+    - "/root"
+  volumes_from:
+    - jira
+  links:
+    - postgres:postgres
+  env_file: .env
+  command: /bin/bash
